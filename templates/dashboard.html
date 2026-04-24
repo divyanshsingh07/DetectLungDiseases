@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Pneumonia X-ray Screening — Respiratory Health AI{% endblock %}
+{% block meta_desc %}Upload a chest X-ray and get an AI-powered pneumonia screening prediction in seconds.{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="product-app">
+  <section class="product-hero" aria-labelledby="product-title">
+    <span class="eyebrow"><i class="fa-solid fa-sparkles"></i> Multi-model fusion · AI medical imaging</span>
+    <h1 id="product-title">Detect Lung Diseases with Multi-Model Fusion</h1>
+    <p>Chest X-ray imaging fused with EHR risk modelling. Upload a JPG or PNG chest X-ray and get a clean prediction with confidence.</p>
+  </section>
+
+  <section class="upload-card" aria-label="Chest X-ray upload">
+      <form id="uploadForm" class="upload-form">
+      <label for="fileInput" id="dropZone" class="drop-zone product-drop-zone">
+        <span class="upload-icon" aria-hidden="true"><i class="fa-regular fa-image"></i></span>
+        <span class="upload-title">Drop your chest X-ray here</span>
+        <small>or click to browse · JPG, JPEG, PNG</small>
+        </label>
+        <input id="fileInput" name="image" type="file" accept=".jpg,.jpeg,.png" hidden />
+
+        <div id="previewWrapper" class="preview-wrapper hidden">
+          <img id="previewImage" alt="X-ray preview" />
+        </div>
+
+      <button id="predictBtn" type="submit" class="btn primary-action" disabled>
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        Analyze Image
+        </button>
+      <p id="message" class="message" aria-live="polite"></p>
+      </form>
+  </section>
+
+  <section id="resultPanel" class="result-panel product-result hidden" aria-live="polite">
+        <div class="result-main">
+          <i id="resultIcon" class="fa-solid fa-circle-info"></i>
+          <div>
+        <span class="result-kicker">Prediction</span>
+            <h2 id="resultTitle">Result</h2>
+            <p id="resultSubtitle"></p>
+          </div>
+        </div>
+    <div class="confidence-meter" aria-label="Prediction confidence">
+      <span id="confidenceFill"></span>
+        </div>
+    <div id="probGrid" class="prob-grid multi compact-probs"></div>
+    <ul id="xrayRecs" class="minimal-recs"></ul>
+  </section>
+
+  <div class="product-tags" aria-label="Product capabilities">
+    <span>AI Classification</span>
+    <span>Fast Inference</span>
+    <span>Medical Imaging Ready</span>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% endblock %}

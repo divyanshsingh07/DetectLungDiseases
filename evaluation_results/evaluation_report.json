@@ -1,0 +1,115 @@
+{
+  "multi_disease_model": {
+    "accuracy": 0.9238805970149254,
+    "precision": 0.9338137439973039,
+    "recall": 0.9297142857142857,
+    "f1_score": 0.9308367028985678,
+    "num_samples": 1340,
+    "confusion_matrix": [
+      [
+        272,
+        12,
+        5,
+        0,
+        11
+      ],
+      [
+        2,
+        298,
+        0,
+        0,
+        0
+      ],
+      [
+        24,
+        1,
+        269,
+        1,
+        5
+      ],
+      [
+        1,
+        0,
+        1,
+        137,
+        1
+      ],
+      [
+        32,
+        0,
+        6,
+        0,
+        262
+      ]
+    ],
+    "class_names": [
+      "Normal",
+      "Pneumonia",
+      "COVID-19",
+      "Tuberculosis",
+      "Lung_Opacity"
+    ],
+    "per_class_counts": {
+      "Normal": 1500,
+      "Pneumonia": 1500,
+      "COVID-19": 1500,
+      "Tuberculosis": 700,
+      "Lung_Opacity": 1500
+    }
+  },
+  "pneumonia_model": {
+    "accuracy": 0.9272030651340997,
+    "precision": 0.9389788293897883,
+    "recall": 0.9654289372599232,
+    "f1_score": 0.952020202020202,
+    "num_samples": 1044,
+    "confusion_matrix": [
+      [
+        214,
+        49
+      ],
+      [
+        27,
+        754
+      ]
+    ],
+    "class_names": [
+      "Normal",
+      "Pneumonia"
+    ]
+  },
+  "lung_cancer_model": {
+    "accuracy": 0.6982,
+    "precision": 0.779307346761339,
+    "recall": 0.7824821766332024,
+    "f1_score": 0.7808915347756643,
+    "num_samples": 10000,
+    "confusion_matrix": [
+      [
+        1604,
+        1523
+      ],
+      [
+        1495,
+        5378
+      ]
+    ],
+    "class_names": [
+      "No Cancer",
+      "Lung Cancer"
+    ]
+  },
+  "combined_metrics": {
+    "average_accuracy": 0.8497612207163416,
+    "average_precision": 0.8840333067161437,
+    "average_recall": 0.8925417998691371,
+    "average_f1": 0.8879161465648114,
+    "weighted_accuracy": 0.7419250645994832,
+    "total_samples": 12384,
+    "models_evaluated": [
+      "multi_disease",
+      "pneumonia",
+      "lung_cancer"
+    ]
+  }
+}

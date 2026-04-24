@@ -1,0 +1,25 @@
+venv/
+__pycache__/
+*.pyc
+
+# Datasets (large raw data folders live under datasets/)
+datasets/chest_xray/
+datasets/COVID-19_Radiography_Dataset/
+datasets/TB_Chest_Radiography_Database/
+datasets/lung_cancer_dataset.csv
+
+# Trained model artifacts (large binary files)
+models/*.pth
+models/*.pkl
+models/lung_cancer_model_meta.json
+
+# Generated images (test uploads, etc.) — keep evaluation charts checked in
+*.png
+*.jpg
+*.jpeg
+!evaluation_results/*.png
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/

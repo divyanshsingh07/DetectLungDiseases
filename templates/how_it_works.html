@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}How it works — Respiratory Health AI{% endblock %}
+{% block meta_desc %}Simple overview of how Respiratory Health AI processes X-rays and risk signals.{% endblock %}
+
+{% block content %}
+<section class="how-container">
+  <header class="how-header">
+    <span class="how-eyebrow"><i class="fa-solid fa-circle-nodes"></i> Product overview</span>
+    <h1>How it works</h1>
+    <p>
+      This system combines chest X-ray analysis with structured health signals to produce a simple,
+      interpretable risk output. It is designed for insight, not diagnosis.
+    </p>
+  </header>
+
+  <div class="how-grid">
+    <article class="how-card">
+      <div class="how-card__icon"><i class="fa-solid fa-x-ray"></i></div>
+      <h3>Chest X-ray analysis</h3>
+      <p>
+        Your image is resized and normalized before being passed through a ResNet18-based model
+        that predicts disease probabilities.
+      </p>
+      <p class="how-muted">
+        A Grad-CAM overlay highlights regions the model focused on for interpretability only.
+      </p>
+    </article>
+
+    <article class="how-card">
+      <div class="how-card__icon"><i class="fa-solid fa-notes-medical"></i></div>
+      <h3>Risk scoring</h3>
+      <p>
+        Structured inputs like age, smoking history, and exposure are processed through a machine
+        learning pipeline to estimate lung cancer risk.
+      </p>
+      <p class="how-muted">
+        Results are grouped into tiers with simple guidance.
+      </p>
+    </article>
+
+    <article class="how-card">
+      <div class="how-card__icon"><i class="fa-solid fa-code-merge"></i></div>
+      <h3>Combined insight</h3>
+      <p>
+        Imaging signals and risk scores are merged into a single summary output using a lightweight
+        fusion rule.
+      </p>
+      <p class="how-muted">
+        This provides a broader view but should always be interpreted with clinical context.
+      </p>
+    </article>
+  </div>
+
+  <div class="how-footer">
+    <p>Educational / research prototype — not a medical device.</p>
+    <a class="how-link" href="{{ url_for('dashboard') }}">Open app <i class="fa-solid fa-arrow-right"></i></a>
+  </div>
+</section>
+{% endblock %}

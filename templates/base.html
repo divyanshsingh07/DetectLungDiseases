@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="{% block meta_desc %}Respiratory Health AI — chest X-ray screening and EHR-based lung cancer risk assessment.{% endblock %}" />
+  <title>{% block title %}Respiratory Health AI{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="site-body {% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <header class="site-nav" role="banner">
+    <a class="site-nav__brand" href="{{ url_for('index') }}">
+      <span class="site-nav__brand-icon" aria-hidden="true"><i class="fa-solid fa-lungs"></i></span>
+      <span>Respiratory Health AI</span>
+    </a>
+
+    <nav class="site-nav__links" aria-label="Primary">
+      <a class="site-nav__link {% if nav_active == 'how' %}is-active{% endif %}" href="{{ url_for('how_it_works') }}">Docs</a>
+      <a class="site-nav__link {% if nav_active == 'metrics' %}is-active{% endif %}" href="{{ url_for('model_accuracy') }}">Metrics</a>
+    </nav>
+
+    <a class="site-nav__cta" href="{{ url_for('dashboard') }}"><i class="fa-solid fa-arrow-right"></i> Open app</a>
+
+    <button type="button" class="site-nav__toggle" id="navToggle" aria-expanded="false" aria-controls="navDrawer" aria-label="Open menu">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <div class="site-nav__drawer" id="navDrawer" aria-hidden="true">
+      <a class="site-nav__link {% if nav_active == 'how' %}is-active{% endif %}" href="{{ url_for('how_it_works') }}">Docs</a>
+      <a class="site-nav__link {% if nav_active == 'metrics' %}is-active{% endif %}" href="{{ url_for('model_accuracy') }}">Metrics</a>
+      <a class="site-nav__cta" href="{{ url_for('dashboard') }}"><i class="fa-solid fa-arrow-right"></i> Open app</a>
+    </div>
+  </header>
+
+  <main id="main-content" class="site-main" role="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <p>
+      Educational / research prototype — not a medical device.
+      <a href="{{ url_for('how_it_works') }}">How it works</a>
+    </p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/site.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

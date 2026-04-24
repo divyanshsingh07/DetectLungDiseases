@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Model metrics — Respiratory Health AI{% endblock %}
+{% block meta_desc %}Accuracy, precision, recall, F1, confusion matrices, and ROC curves for all trained models.{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/accuracy.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="accuracy-container">
+  <section class="accuracy-hero">
+    <span class="accuracy-eyebrow"><i class="fa-solid fa-chart-simple"></i> Evaluation</span>
+    <h1>Model performance, simplified</h1>
+    <p>Accuracy, fusion score, confusion matrices, and ROC curves for the current Respiratory Health AI build.</p>
+    <div class="eval-actions accuracy-hero-actions">
+      <button type="button" class="run-eval-btn" id="runEvalBtn">
+        <i class="fa-solid {% if evaluated %}fa-rotate{% else %}fa-play{% endif %}"></i>
+        {% if evaluated %}Re-run evaluation{% else %}Run evaluation{% endif %}
+      </button>
+      <a class="secondary-eval-btn" href="{{ url_for('dashboard') }}">Open app</a>
+    </div>
+  </section>
+
+  {% if not evaluated %}
+    <div class="error-banner">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <div>
+        <strong>No evaluation results found.</strong><br>
+        {{ error or "Click the button below to run the evaluation and generate metrics." }}
+      </div>
+    </div>
+    <div id="evalProgress" class="info-banner" style="display: none;">
+      <div class="loading-spinner" aria-hidden="true"></div>
+      <div><strong>Running evaluation…</strong><br>This may take a few minutes.</div>
+    </div>
+  {% else %}
+    <div id="evalProgress" class="info-banner" style="display: none;">
+      <div class="loading-spinner" aria-hidden="true"></div>
+      <div><strong>Running evaluation…</strong><br>This may take a few minutes.</div>
+    </div>
+
+    <section class="metric-spotlight-grid">
+      {% if report.multi_disease_model %}
+      <article class="metric-card">
+        <div class="metric-label">X-ray classifier</div>
+        <div class="metric-value success">{{ "%.2f"|format(report.multi_disease_model.accuracy * 100) }}%</div>
+        <div class="metric-subtitle">Accuracy across {{ "{:,}".format(report.multi_disease_model.num_samples) }} images</div>
+      </article>
+      {% endif %}
+      {% if report.lung_cancer_model %}
+      <article class="metric-card">
+        <div class="metric-label">EHR risk model</div>
+        <div class="metric-value">{{ "%.2f"|format(report.lung_cancer_model.accuracy * 100) }}%</div>
+        <div class="metric-subtitle">Accuracy across {{ "{:,}".format(report.lung_cancer_model.num_samples) }} records</div>
+      </article>
+      {% endif %}
+      {% if report.fusion_metrics %}
+      <article class="metric-card highlight">
+        <div class="metric-label">Fusion score proxy</div>
+        {% if report.fusion_metrics.score_proxy is not none %}
+        <div class="metric-value">{{ "%.2f"|format(report.fusion_metrics.score_proxy * 100) }}%</div>
+        {% else %}
+        <div class="metric-value">N/A</div>
+        {% endif %}
+        <div class="metric-subtitle">{{ "%.0f"|format(report.fusion_metrics.xray_weight * 100) }}% X-ray + {{ "%.0f"|format(report.fusion_metrics.ehr_weight * 100) }}% EHR</div>
+      </article>
+      {% endif %}
+      {% if report.combined_metrics %}
+      <article class="metric-card">
+        <div class="metric-label">Aggregate average</div>
+        <div class="metric-value">{{ "%.2f"|format(report.combined_metrics.average_accuracy * 100) }}%</div>
+        <div class="metric-subtitle">Across evaluated model test sets</div>
+      </article>
+      {% endif %}
+    </section>
+
+    {% if report.fusion_metrics %}
+    <section class="evaluation-note">
+      <i class="fa-solid fa-circle-info"></i>
+      <div>
+        <strong>Fusion is functional in the app.</strong>
+        <span>{{ report.fusion_metrics.note }}</span>
+      </div>
+    </section>
+    {% endif %}
+
+    <div class="graphs-section">
+      <h2 class="section-title"><i class="fa-solid fa-grid-2"></i> Evaluation charts</h2>
+      <div class="graph-card">
+        <h3 class="graph-title">Confusion matrices</h3>
+        <p class="graph-explainer">
+          These matrices compare each model's predicted class against the true class. Darker diagonal cells are correct
+          predictions; off-diagonal cells are mistakes.
+        </p>
+        <img src="{{ url_for('evaluation_image', filename='confusion_matrices.png') }}"
+             alt="Confusion matrices"
+             loading="lazy"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+        <div style="display:none; padding: 2rem; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 10px;">
+          Graph not available. Click &ldquo;Re-run evaluation&rdquo;.
+        </div>
+      </div>
+      {% if report.fusion_metrics and report.fusion_metrics.score_proxy is not none %}
+      <div class="fusion-confusion-card">
+        <div>
+          <h3><i class="fa-solid fa-code-merge"></i> Fusion score</h3>
+          <p>
+            Fusion is a score-level blend, so it is shown as a proxy score instead of a class-by-class confusion matrix.
+          </p>
+        </div>
+        <div class="fusion-confusion-score">
+          <span>Fusion proxy score</span>
+          <strong>{{ "%.2f"|format(report.fusion_metrics.score_proxy * 100) }}%</strong>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="chart-grid">
+      <div class="graph-card">
+        <h3 class="graph-title"><i class="fa-solid fa-chart-bar"></i> Performance comparison</h3>
+        <img src="{{ url_for('evaluation_image', filename='metrics_comparison.png') }}"
+             alt="Metrics comparison"
+             loading="lazy"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+        <div style="display:none; padding: 2rem; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 10px;">
+          Graph not available. Click &ldquo;Re-run evaluation&rdquo;.
+        </div>
+      </div>
+
+      <div class="graph-card">
+        <h3 class="graph-title"><i class="fa-solid fa-chart-line"></i> ROC curves</h3>
+        <img src="{{ url_for('evaluation_image', filename='roc_curves.png') }}"
+             alt="ROC curves"
+             loading="lazy"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+        <div style="display:none; padding: 2rem; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 10px;">
+          Graph not available. Click &ldquo;Re-run evaluation&rdquo;.
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const btn = document.getElementById("runEvalBtn");
+    const progress = document.getElementById("evalProgress");
+    if (!btn || !progress) return;
+
+    btn.addEventListener("click", async function runEvaluation() {
+      btn.disabled = true;
+      progress.style.display = "flex";
+      try {
+        const response = await fetch("/run-evaluation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await response.json();
+        if (data.success) {
+          window.location.reload();
+        } else {
+          window.alert("Evaluation failed: " + (data.error || "Unknown error"));
+          btn.disabled = false;
+          progress.style.display = "none";
+        }
+      } catch (error) {
+        window.alert("Error: " + (error && error.message ? error.message : String(error)));
+        btn.disabled = false;
+        progress.style.display = "none";
+      }
+    });
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,112 @@
+{
+  "class_names": [
+    "Normal",
+    "Pneumonia",
+    "COVID-19",
+    "Tuberculosis",
+    "Lung_Opacity"
+  ],
+  "class_sources": {
+    "Normal": [
+      "chest_xray/train/NORMAL",
+      "COVID-19_Radiography_Dataset/Normal/images",
+      "TB_Chest_Radiography_Database/Normal"
+    ],
+    "Pneumonia": [
+      "chest_xray/train/PNEUMONIA",
+      "COVID-19_Radiography_Dataset/Viral Pneumonia/images"
+    ],
+    "COVID-19": [
+      "COVID-19_Radiography_Dataset/COVID/images"
+    ],
+    "Tuberculosis": [
+      "TB_Chest_Radiography_Database/Tuberculosis"
+    ],
+    "Lung_Opacity": [
+      "COVID-19_Radiography_Dataset/Lung_Opacity/images"
+    ]
+  },
+  "num_classes": 5,
+  "per_class_counts": {
+    "Normal": 1500,
+    "Pneumonia": 1500,
+    "COVID-19": 1500,
+    "Tuberculosis": 700,
+    "Lung_Opacity": 1500
+  },
+  "n_train": 5360,
+  "n_val": 1340,
+  "max_per_class": 1500,
+  "epochs": 3,
+  "lr": 0.001,
+  "batch_size": 32,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.4391106116237925,
+      "train_acc": 0.8348880597014925,
+      "val_loss": 0.2944503148100269,
+      "val_acc": 0.8947761194029851,
+      "seconds": 285.12
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.2668905999455879,
+      "train_acc": 0.8975746268656717,
+      "val_loss": 0.2447621138683006,
+      "val_acc": 0.9074626865671642,
+      "seconds": 364.58
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.22303294414904581,
+      "train_acc": 0.9108208955223881,
+      "val_loss": 0.19674856831778342,
+      "val_acc": 0.9238805970149254,
+      "seconds": 260.22
+    }
+  ],
+  "metrics": {
+    "accuracy": 0.9239,
+    "precision_macro": 0.9338,
+    "recall_macro": 0.9297,
+    "f1_macro": 0.9308,
+    "confusion_matrix": [
+      [
+        272,
+        12,
+        5,
+        0,
+        11
+      ],
+      [
+        2,
+        298,
+        0,
+        0,
+        0
+      ],
+      [
+        24,
+        1,
+        269,
+        1,
+        5
+      ],
+      [
+        1,
+        0,
+        1,
+        137,
+        1
+      ],
+      [
+        32,
+        0,
+        6,
+        0,
+        262
+      ]
+    ]
+  }
+}

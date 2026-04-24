@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Respiratory Health AI — Home{% endblock %}
+{% block meta_desc %}Chest X-ray screening, EHR lung cancer risk, and combined respiratory assessment in one accessible web app.{% endblock %}
+
+{% block content %}
+<section class="product-landing">
+  <span class="landing-hero__badge"><i class="fa-solid fa-shield-heart"></i> Multi-model fusion · AI screening prototype</span>
+  <h1>Detect Lung Diseases with Multi-Model Fusion</h1>
+  <p class="landing-hero__lead">Chest X-ray imaging fused with EHR risk modelling for a single, patient-level respiratory health assessment in seconds.</p>
+  <div class="landing-hero__actions">
+    <a class="btn-lg btn-lg--primary" href="{{ url_for('dashboard') }}"><i class="fa-solid fa-arrow-up-from-bracket"></i> Open app</a>
+    <a class="btn-lg btn-lg--ghost" href="{{ url_for('model_accuracy') }}">View evaluation</a>
+  </div>
+</section>
+{% endblock %}
