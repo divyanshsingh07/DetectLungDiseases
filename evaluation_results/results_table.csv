@@ -1,6 +1,7 @@
 Model,Accuracy,Precision,Recall,F1-Score,Samples
 Multi-Disease X-ray,0.9239,0.9338,0.9297,0.9308,1340
-Pneumonia (legacy),0.9272,0.9390,0.9654,0.9520,1044
+Pneumonia (legacy),0.9406,0.9573,0.9646,0.9610,1044
 Lung Cancer Risk,0.6982,0.7793,0.7825,0.7809,10000
-Combined (Average),0.8498,0.8840,0.8925,0.8879,12384
-Combined (Weighted),0.7419,-,-,-,12384
+Combined (Average),0.8542,0.8902,0.8923,0.8909,12384
+Combined (Weighted),0.7431,-,-,-,12384
+Fusion proxy (multimodal),0.8110,-,-,-,-

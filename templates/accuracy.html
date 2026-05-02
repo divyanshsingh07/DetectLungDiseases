@@ -8,16 +8,21 @@
 {% endblock %}
 
 {% block content %}
-<div class="accuracy-container">
+<div class="accuracy-container accuracy-report-root">
   <section class="accuracy-hero">
     <span class="accuracy-eyebrow"><i class="fa-solid fa-chart-simple"></i> Evaluation</span>
     <h1>Model performance, simplified</h1>
     <p>Accuracy, fusion score, confusion matrices, and ROC curves for the current Respiratory Health AI build.</p>
-    <div class="eval-actions accuracy-hero-actions">
+    <div class="eval-actions accuracy-hero-actions no-print">
       <button type="button" class="run-eval-btn" id="runEvalBtn">
         <i class="fa-solid {% if evaluated %}fa-rotate{% else %}fa-play{% endif %}"></i>
         {% if evaluated %}Re-run evaluation{% else %}Run evaluation{% endif %}
       </button>
+      {% if evaluated %}
+      <button type="button" class="secondary-eval-btn" id="accuracyPrintBtn" title="Print this metrics report">
+        Print report
+      </button>
+      {% endif %}
       <a class="secondary-eval-btn" href="{{ url_for('dashboard') }}">Open app</a>
     </div>
   </section>
@@ -30,12 +35,12 @@
         {{ error or "Click the button below to run the evaluation and generate metrics." }}
       </div>
     </div>
-    <div id="evalProgress" class="info-banner" style="display: none;">
+    <div id="evalProgress" class="info-banner no-print" style="display: none;">
       <div class="loading-spinner" aria-hidden="true"></div>
       <div><strong>Running evaluation…</strong><br>This may take a few minutes.</div>
     </div>
   {% else %}
-    <div id="evalProgress" class="info-banner" style="display: none;">
+    <div id="evalProgress" class="info-banner no-print" style="display: none;">
       <div class="loading-spinner" aria-hidden="true"></div>
       <div><strong>Running evaluation…</strong><br>This may take a few minutes.</div>
     </div>
@@ -63,7 +68,13 @@
         {% else %}
         <div class="metric-value">N/A</div>
         {% endif %}
-        <div class="metric-subtitle">{{ "%.0f"|format(report.fusion_metrics.xray_weight * 100) }}% X-ray + {{ "%.0f"|format(report.fusion_metrics.ehr_weight * 100) }}% EHR</div>
+        <div class="metric-subtitle">
+          {% if report.fusion_metrics.ehr_used_in_proxy %}
+            {{ "%.0f"|format(report.fusion_metrics.xray_weight * 100) }}% X-ray + {{ "%.0f"|format(report.fusion_metrics.ehr_weight * 100) }}% EHR (accuracy proxy)
+          {% else %}
+            X-ray-only proxy — EHR not in this evaluation or omitted at inference
+          {% endif %}
+        </div>
       </article>
       {% endif %}
       {% if report.combined_metrics %}
@@ -146,6 +157,28 @@
 
 {% block scripts %}
 <script>
+  (function () {
+    const printBtn = document.getElementById("accuracyPrintBtn");
+    if (printBtn) {
+      printBtn.addEventListener("click", function () {
+        const root = document.querySelector(".accuracy-report-root");
+        if (!root) return;
+        root.classList.add("print-focus");
+        document.body.classList.add("printing-report");
+        let cleaned = false;
+        const cleanup = function () {
+          if (cleaned) return;
+          cleaned = true;
+          root.classList.remove("print-focus");
+          document.body.classList.remove("printing-report");
+        };
+        window.addEventListener("afterprint", cleanup, { once: true });
+        window.print();
+        window.setTimeout(cleanup, 1500);
+      });
+    }
+  })();
+
   (function () {
     const btn = document.getElementById("runEvalBtn");
     const progress = document.getElementById("evalProgress");

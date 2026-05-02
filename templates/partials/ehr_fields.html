@@ -1,0 +1,52 @@
+{# expects lung_schema, fields_required (bool) #}
+<div class="field-grid" aria-label="EHR clinical inputs">
+  {% for col in lung_schema.numeric_features %}
+  <label class="field">
+    <span>{{ col.replace('_', ' ')|title }}</span>
+    <input
+      type="number"
+      name="{{ col }}"
+      min="0"
+      step="any"
+      {% if fields_required %}required{% endif %}
+      placeholder="e.g. {{ 62 if col == 'age' else 20 }}"
+    />
+  </label>
+  {% endfor %}
+  {% for col in lung_schema.categorical_features %}
+    {% if col == "family_history" %}
+    <div class="field-row-with-action">
+      <label class="field">
+        <span>{{ col.replace('_', ' ')|title }}</span>
+        <select name="{{ col }}" {% if fields_required %}required{% endif %}>
+          {% if fields_required %}
+          <option value="">Select…</option>
+          {% else %}
+          <option value="">— Skip (X-ray only) —</option>
+          {% endif %}
+          {% for opt in lung_schema.feature_value_options[col] %}
+          <option value="{{ opt }}">{{ opt }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="button" class="fill-dummy-btn" title="Fill sample data for testing">
+        Fill dummy data
+      </button>
+    </div>
+    {% else %}
+    <label class="field">
+      <span>{{ col.replace('_', ' ')|title }}</span>
+      <select name="{{ col }}" {% if fields_required %}required{% endif %}>
+        {% if fields_required %}
+        <option value="">Select…</option>
+        {% else %}
+        <option value="">— Skip (X-ray only) —</option>
+        {% endif %}
+        {% for opt in lung_schema.feature_value_options[col] %}
+        <option value="{{ opt }}">{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    {% endif %}
+  {% endfor %}
+</div>

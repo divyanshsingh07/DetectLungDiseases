@@ -58,19 +58,19 @@
     }
   },
   "pneumonia_model": {
-    "accuracy": 0.9272030651340997,
-    "precision": 0.9389788293897883,
-    "recall": 0.9654289372599232,
-    "f1_score": 0.952020202020202,
+    "accuracy": 0.9406130268199234,
+    "precision": 0.9573400250941029,
+    "recall": 0.9646017699115044,
+    "f1_score": 0.9609571788413098,
     "num_samples": 1044,
     "confusion_matrix": [
       [
-        214,
-        49
+        219,
+        34
       ],
       [
-        27,
-        754
+        28,
+        763
       ]
     ],
     "class_names": [
@@ -100,16 +100,23 @@
     ]
   },
   "combined_metrics": {
-    "average_accuracy": 0.8497612207163416,
-    "average_precision": 0.8840333067161437,
-    "average_recall": 0.8925417998691371,
-    "average_f1": 0.8879161465648114,
-    "weighted_accuracy": 0.7419250645994832,
+    "average_accuracy": 0.8542312079449497,
+    "average_precision": 0.8901537052842485,
+    "average_recall": 0.8922660774196641,
+    "average_f1": 0.890895138838514,
+    "weighted_accuracy": 0.7430555555555556,
     "total_samples": 12384,
     "models_evaluated": [
       "multi_disease",
       "pneumonia",
       "lung_cancer"
-    ]
+    ],
+    "fusion_proxy": {
+      "mode": "multimodal",
+      "accuracy_proxy": 0.8110402985074627,
+      "xray_model": "multi_disease",
+      "xray_weight": 0.5,
+      "ehr_weight": 0.5
+    }
   }
 }

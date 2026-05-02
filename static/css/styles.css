@@ -134,6 +134,7 @@ body {
   border: 1px solid var(--border);
   background: rgba(15, 15, 16, 0.65);
   border-radius: 14px;
+  box-shadow: 0 0 0 1px var(--glass-highlight) inset;
 }
 
 .tab {
@@ -143,13 +144,16 @@ body {
   color: var(--muted);
   font: inherit;
   font-weight: 600;
-  padding: 0.55rem 0.75rem;
+  padding: 0.72rem 0.9rem;
   border-radius: 10px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
+  min-height: 46px;
+  text-align: center;
+  white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -162,6 +166,10 @@ body {
   background: var(--gradient-accent);
   color: #1a0a00;
   box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+.tab i {
+  font-size: 0.95rem;
 }
 
 .tab:focus-visible {
@@ -488,12 +496,64 @@ body {
 
 .form-intro {
   margin: 0 0 0.25rem;
-  color: var(--muted);
-  font-size: 0.92rem;
+  color: #c8c8cf;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(255, 138, 42, 0.24);
+  background: rgba(255, 138, 42, 0.08);
+  border-radius: 10px;
 }
 
 .form-intro strong {
   color: var(--text);
+}
+
+.form-section-title {
+  margin: 1rem 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.field-row-with-action {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.6rem;
+  align-items: end;
+}
+
+.fill-dummy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 44px;
+  padding: 0 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 138, 42, 0.45);
+  background: rgba(255, 138, 42, 0.12);
+  color: #ffd7b4;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.fill-dummy-btn:hover {
+  background: rgba(255, 138, 42, 0.2);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.fill-dummy-btn:focus-visible {
+  outline: 2px solid var(--accent-end);
+  outline-offset: 2px;
 }
 
 .field-grid {
@@ -508,8 +568,10 @@ body {
 }
 
 .field > span {
-  color: var(--muted);
-  font-size: 0.82rem;
+  color: #e5e5ea;
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .field input,
@@ -518,8 +580,9 @@ body {
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 0.6rem 0.7rem;
+  padding: 0.68rem 0.78rem;
   font: inherit;
+  min-height: 44px;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -592,6 +655,11 @@ body {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.7rem;
+}
+
+#tab-ehr .upload-card,
+#tab-combined .upload-card {
+  max-width: 900px;
 }
 
 .combined-card {
@@ -698,7 +766,7 @@ body {
 .product-hero p {
   max-width: 520px;
   margin: 1rem auto 0;
-  color: var(--muted);
+  color: #cfcfd5;
   font-size: clamp(1rem, 2vw, 1.15rem);
   line-height: 1.65;
 }
@@ -809,6 +877,72 @@ body {
   animation: product-rise 0.28s ease both;
 }
 
+.clinical-summary-grid {
+  margin-top: 0.95rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.medical-card {
+  margin-top: 0.9rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(26, 26, 28, 0.68);
+  box-shadow: 0 0 0 1px var(--glass-highlight) inset;
+}
+
+.medical-card h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.9rem;
+  color: #e9e9ee;
+}
+
+.primary-summary {
+  border-left: 4px solid rgba(100, 148, 237, 0.85);
+}
+
+.summary-metrics {
+  margin: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.summary-metrics div {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+
+.summary-metrics dt {
+  margin: 0;
+  color: #a7a7b0;
+  font-size: 0.8rem;
+}
+
+.summary-metrics dd {
+  margin: 0;
+  color: #f5f5f8;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.medical-note {
+  margin: 0;
+  color: #ececf1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.medical-subnote {
+  margin: 0.4rem 0 0;
+  color: #b2b2bc;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
 .result-kicker {
   display: block;
   margin-bottom: 0.15rem;
@@ -862,6 +996,10 @@ body {
   line-height: 1.55;
 }
 
+.recs-card h3:not(:first-child) {
+  margin-top: 0.95rem;
+}
+
 .product-tags {
   display: flex;
   justify-content: center;
@@ -874,10 +1012,19 @@ body {
   padding: 0.5rem 0.8rem;
   border: 1px solid var(--border);
   border-radius: 999px;
-  color: var(--muted);
+  color: #c7c7ce;
   background: rgba(35, 35, 38, 0.55);
   font-size: 0.86rem;
   font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .combined-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .clinical-summary-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @keyframes product-rise {
@@ -904,8 +1051,15 @@ body {
   .accuracy-btn {
     padding: 0.6rem;
   }
-  .tab span {
-    display: none;
+  .tab-bar {
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+  .tab {
+    flex: 1 1 calc(50% - 0.45rem);
+    white-space: normal;
+    font-size: 0.92rem;
+    min-height: 44px;
   }
   .prob-grid {
     grid-template-columns: 1fr;
@@ -916,6 +1070,13 @@ body {
   .field-grid {
     grid-template-columns: 1fr;
   }
+  .field-row-with-action {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .fill-dummy-btn {
+    width: 100%;
+  }
   .combined-grid {
     grid-template-columns: 1fr;
   }
@@ -924,5 +1085,394 @@ body {
   }
   .product-drop-zone {
     min-height: 220px;
+  }
+}
+
+/* ---------- Patient meta + printable clinical report ---------- */
+.patient-meta-card {
+  max-width: 680px;
+  margin: 0 auto 1.25rem;
+  padding: 1rem 1.15rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 138, 42, 0.28);
+  background: rgba(26, 26, 28, 0.72);
+  box-shadow: 0 0 0 1px var(--glass-highlight) inset;
+}
+
+.patient-meta-title {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.patient-meta-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.86rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.patient-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+/* Formal clinical summary (no decorative icons inside document) */
+.clinical-report-head {
+  margin-bottom: 1.25rem;
+  padding: 1.15rem 1.25rem;
+  border-radius: 2px;
+  border: 1px solid #3a3a40;
+  border-top: 3px solid #c5c5cc;
+  background: #1c1c1f;
+  font-family: "Work Sans", "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+.clinical-report-head__masthead {
+  text-align: center;
+  margin-bottom: 0.65rem;
+}
+
+.clinical-report-head__institution {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #e4e4e7;
+}
+
+.clinical-report-head__doc-subtitle {
+  margin-top: 0.2rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.clinical-report-head__rule {
+  border: 0;
+  border-top: 1px solid #4a4a52;
+  margin: 0.65rem 0 0.85rem;
+}
+
+.clinical-report-head__id-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  margin-bottom: 0.9rem;
+}
+
+.clinical-report-head__id-table th,
+.clinical-report-head__id-table td {
+  border: 1px solid #3a3a40;
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.clinical-report-head__id-table th {
+  width: 22%;
+  background: rgba(255, 255, 255, 0.04);
+  color: #c4c4cc;
+  font-weight: 600;
+}
+
+.clinical-report-head__id-table td {
+  color: #ececf1;
+}
+
+.clinical-report-head__doc-type {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #d4d4d8;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid #3a3a40;
+}
+
+.clinical-report-severity {
+  margin: 0.75rem 0 1rem;
+  padding: 0.55rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 4px solid #71717a;
+}
+
+.clinical-report-severity__cap {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a1a1aa;
+}
+
+.clinical-report-severity__text {
+  margin-top: 0.25rem;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: #e4e4e7;
+}
+
+.clinical-report-severity--low {
+  border-left-color: #22c55e;
+}
+
+.clinical-report-severity--moderate {
+  border-left-color: #eab308;
+}
+
+.clinical-report-severity--high {
+  border-left-color: #f97316;
+}
+
+.clinical-report-severity--critical {
+  border-left-color: #dc2626;
+}
+
+.clinical-report-severity--elevated {
+  border-left-color: #f59e0b;
+}
+
+.clinical-report-metric {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #3a3a40;
+}
+
+.clinical-report-metric__hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.35rem;
+}
+
+.clinical-report-metric__label {
+  color: #a1a1aa;
+  font-weight: 600;
+}
+
+.clinical-report-metric__value {
+  font-weight: 700;
+  color: #fafafa;
+  font-variant-numeric: tabular-nums;
+}
+
+.clinical-report-metric__track {
+  height: 8px;
+  border-radius: 2px;
+  background: #2d2d32;
+  overflow: hidden;
+  border: 1px solid #3f3f46;
+}
+
+.clinical-report-metric__fill {
+  height: 100%;
+  background: #64748b;
+  border-radius: 1px;
+}
+
+.clinical-report-head__block {
+  margin: 0.75rem 0 0;
+}
+
+.clinical-report-head__block-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a1a1aa;
+}
+
+.clinical-report-head__block-text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #ececf1;
+}
+
+.clinical-report-head__ancillary {
+  margin: 0.75rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #d4d4d8;
+}
+
+.clinical-report-head__disclaimer {
+  margin: 1rem 0 0;
+  padding-top: 0.65rem;
+  border-top: 1px dashed #52525b;
+  font-size: 0.72rem;
+  color: #a1a1aa;
+  line-height: 1.45;
+}
+
+.report-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.65rem;
+}
+
+.btn-print {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(35, 35, 38, 0.85);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.btn-print:hover {
+  border-color: rgba(255, 138, 42, 0.45);
+  background: rgba(255, 138, 42, 0.1);
+}
+
+.btn-print:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 720px) {
+  .patient-meta-grid {
+    grid-template-columns: 1fr;
+  }
+  .clinical-report-head__id-table th,
+  .clinical-report-head__id-table td {
+    display: block;
+    width: 100%;
+  }
+  .clinical-report-head__id-table th {
+    border-bottom: 0;
+    padding-bottom: 0.15rem;
+  }
+}
+
+/* Print: isolate one report; light paper theme */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body.printing-report * {
+    visibility: hidden;
+  }
+
+  body.printing-report .print-focus,
+  body.printing-report .print-focus * {
+    visibility: visible;
+  }
+
+  body.printing-report .print-focus {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 12mm 14mm;
+    background: #fff !important;
+    color: #111 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  body.printing-report .print-focus .clinical-report-head {
+    background: #fff !important;
+    border: 1px solid #000 !important;
+    border-top: 3px solid #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body.printing-report .print-focus .clinical-report-head__institution,
+  body.printing-report .print-focus .clinical-report-head__doc-type,
+  body.printing-report .print-focus .clinical-report-head__block-label,
+  body.printing-report .print-focus .clinical-report-severity__cap {
+    color: #111 !important;
+  }
+
+  body.printing-report .print-focus .clinical-report-head__doc-subtitle,
+  body.printing-report .print-focus .clinical-report-head__disclaimer,
+  body.printing-report .print-focus .clinical-report-metric__label {
+    color: #444 !important;
+  }
+
+  body.printing-report .print-focus .clinical-report-head__id-table th,
+  body.printing-report .print-focus .clinical-report-head__id-table td {
+    border-color: #000 !important;
+    color: #111 !important;
+    background: #fff !important;
+  }
+
+  body.printing-report .print-focus .clinical-report-head__id-table th {
+    background: #f0f0f0 !important;
+  }
+
+  body.printing-report .print-focus .clinical-report-severity__text,
+  body.printing-report .print-focus .clinical-report-head__block-text,
+  body.printing-report .print-focus .clinical-report-head__ancillary {
+    color: #111 !important;
+  }
+
+  body.printing-report .print-focus .clinical-report-severity {
+    background: #f7f7f7 !important;
+    border-left-width: 4px !important;
+  }
+
+  body.printing-report .print-focus .clinical-report-metric__track {
+    background: #e5e5e5 !important;
+    border-color: #999 !important;
+  }
+
+  body.printing-report .print-focus .clinical-report-metric__fill {
+    background: #4b5563 !important;
+  }
+
+  body.printing-report .print-focus .clinical-report-metric__value {
+    color: #111 !important;
+  }
+
+  body.printing-report .print-focus .result-main,
+  body.printing-report .print-focus .prob-row,
+  body.printing-report .print-focus .minimal-recs,
+  body.printing-report .print-focus .combined-card {
+    color: #111 !important;
+  }
+
+  body.printing-report .print-focus .result-main i {
+    display: none !important;
+  }
+
+  body.printing-report .print-focus .prob-item,
+  body.printing-report .print-focus .combined-card,
+  body.printing-report .print-focus .confidence-meter,
+  body.printing-report .print-focus .risk-bar {
+    border-color: #bbb !important;
+    background: #fff !important;
+  }
+
+  body.printing-report .print-focus .prob-bar,
+  body.printing-report .print-focus .confidence-meter span {
+    background: #e5e5e5 !important;
+  }
+
+  body.printing-report .print-focus .prob-row i {
+    display: none !important;
+  }
+
+  body.printing-report #combinedResult.print-focus .combined-page-two {
+    break-before: page;
+    page-break-before: always;
   }
 }

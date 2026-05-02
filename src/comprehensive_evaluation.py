@@ -11,7 +11,8 @@ Outputs into ``evaluation_results/``:
   - metrics_comparison.png
   - roc_curves.png
   - results_table.csv
-  - evaluation_report.json
+  - evaluation_report.json (includes ``combined_metrics.fusion_proxy``: multimodal
+    accuracy proxy when both X-ray and EHR ran, else X-ray-only or EHR-only)
 """
 
 from __future__ import annotations
@@ -53,6 +54,9 @@ MODELS_DIR = BASE_DIR / "models"
 DATASETS_DIR = BASE_DIR / "datasets"
 EVAL_RESULTS_DIR = BASE_DIR / "evaluation_results"
 EVAL_RESULTS_DIR.mkdir(exist_ok=True)
+
+# Score-level fusion weights (keep in sync with app.FUSION_WEIGHTS).
+FUSION_WEIGHTS = {"xray_abnormal": 0.5, "ehr_lung_cancer": 0.5}
 
 sys.path.insert(0, str(SRC_DIR))
 
@@ -322,11 +326,58 @@ class ComprehensiveModelEvaluator:
             "total_samples": int(total_samples),
             "models_evaluated": keys,
         }
+        self._attach_fusion_proxy()
         print(
             f"avg_acc={avg_acc:.4f} weighted_acc={weighted_acc:.4f} "
             f"models={keys} samples={total_samples}"
         )
         return self.results["combined"]
+
+    def _attach_fusion_proxy(self):
+        """App-style accuracy proxy: both modalities when available, else X-ray or EHR only."""
+        c = self.results.get("combined")
+        if not c:
+            return
+        has_ehr = "lung_cancer" in self.results
+        xray_key = None
+        if "multi_disease" in self.results:
+            xray_key = "multi_disease"
+        elif "pneumonia" in self.results:
+            xray_key = "pneumonia"
+
+        wx = float(FUSION_WEIGHTS["xray_abnormal"])
+        we = float(FUSION_WEIGHTS["ehr_lung_cancer"])
+        wt = wx + we
+        if wt <= 0:
+            return
+
+        if xray_key and has_ehr:
+            x_acc = self.results[xray_key]["accuracy"]
+            e_acc = self.results["lung_cancer"]["accuracy"]
+            proxy = (wx / wt) * x_acc + (we / wt) * e_acc
+            c["fusion_proxy"] = {
+                "mode": "multimodal",
+                "accuracy_proxy": float(proxy),
+                "xray_model": xray_key,
+                "xray_weight": wx / wt,
+                "ehr_weight": we / wt,
+            }
+        elif xray_key:
+            c["fusion_proxy"] = {
+                "mode": "xray_only",
+                "accuracy_proxy": float(self.results[xray_key]["accuracy"]),
+                "xray_model": xray_key,
+                "xray_weight": 1.0,
+                "ehr_weight": 0.0,
+            }
+        elif has_ehr:
+            c["fusion_proxy"] = {
+                "mode": "ehr_only",
+                "accuracy_proxy": float(self.results["lung_cancer"]["accuracy"]),
+                "xray_model": None,
+                "xray_weight": 0.0,
+                "ehr_weight": 1.0,
+            }
 
     # ------------------------------------------------------------------
     # Plots
@@ -464,6 +515,14 @@ class ComprehensiveModelEvaluator:
                 "Precision": "-", "Recall": "-", "F1-Score": "-",
                 "Samples": c["total_samples"],
             })
+            fp = c.get("fusion_proxy")
+            if fp:
+                rows.append({
+                    "Model": f"Fusion proxy ({fp['mode']})",
+                    "Accuracy": f"{fp['accuracy_proxy']:.4f}",
+                    "Precision": "-", "Recall": "-", "F1-Score": "-",
+                    "Samples": "-",
+                })
         df = pd.DataFrame(rows)
         df.to_csv(save_path, index=False)
         print(f"  Saved: {save_path}")

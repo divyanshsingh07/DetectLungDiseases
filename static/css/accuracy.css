@@ -432,3 +432,51 @@
     min-width: 0;
   }
 }
+
+@media print {
+  body.printing-report .accuracy-report-root.print-focus {
+    background: #fff !important;
+    max-width: 100% !important;
+    padding: 0 0 1rem !important;
+  }
+
+  body.printing-report .accuracy-report-root.print-focus .accuracy-hero h1,
+  body.printing-report .accuracy-report-root.print-focus .accuracy-hero p,
+  body.printing-report .accuracy-report-root.print-focus .section-title,
+  body.printing-report .accuracy-report-root.print-focus .graph-title,
+  body.printing-report .accuracy-report-root.print-focus .graph-explainer,
+  body.printing-report .accuracy-report-root.print-focus .metric-label,
+  body.printing-report .accuracy-report-root.print-focus .metric-subtitle {
+    color: #111 !important;
+  }
+
+  body.printing-report .accuracy-report-root.print-focus .metric-value {
+    color: #0f766e !important;
+  }
+
+  body.printing-report .accuracy-report-root.print-focus .metric-card,
+  body.printing-report .accuracy-report-root.print-focus .graph-card,
+  body.printing-report .accuracy-report-root.print-focus .fusion-confusion-card,
+  body.printing-report .accuracy-report-root.print-focus .evaluation-note {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid #ccc !important;
+    background: #f8fafc !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body.printing-report .accuracy-report-root.print-focus img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+  }
+
+  body.printing-report .accuracy-report-root.print-focus .chart-grid {
+    display: block;
+  }
+
+  body.printing-report .accuracy-report-root.print-focus .chart-grid .graph-card {
+    margin-bottom: 1rem;
+  }
+}

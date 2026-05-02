@@ -1,0 +1,18 @@
+services:
+  respiratory-health-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: respiratory-health-ai
+    ports:
+      - "8080:5000"
+    environment:
+      FLASK_ENV: production
+    volumes:
+      - ./models:/app/models
+      - ./datasets:/app/datasets
+      - ./evaluation_results:/app/evaluation_results
+      # So UI changes (EHR / Combined tabs) show without rebuilding the image
+      - ./templates:/app/templates
+      - ./static:/app/static
+    restart: unless-stopped

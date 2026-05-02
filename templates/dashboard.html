@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Pneumonia X-ray Screening — Respiratory Health AI{% endblock %}
-{% block meta_desc %}Upload a chest X-ray and get an AI-powered pneumonia screening prediction in seconds.{% endblock %}
+{% block title %}Respiratory Health AI — Analysis{% endblock %}
+{% block meta_desc %}Chest X-ray screening, optional EHR lung cancer risk, and combined multimodal assessment.{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
@@ -11,15 +11,47 @@
   <section class="product-hero" aria-labelledby="product-title">
     <span class="eyebrow"><i class="fa-solid fa-sparkles"></i> Multi-model fusion · AI medical imaging</span>
     <h1 id="product-title">Detect Lung Diseases with Multi-Model Fusion</h1>
-    <p>Chest X-ray imaging fused with EHR risk modelling. Upload a JPG or PNG chest X-ray and get a clean prediction with confidence.</p>
+    <p>
+      Upload a chest X-ray for multi-class findings. Optionally enter EHR-style risk factors to run the tabular lung cancer model,
+      or use <strong>Combined</strong> to fuse image + clinical data in one request.
+    </p>
   </section>
 
-  <section class="upload-card" aria-label="Chest X-ray upload">
+  <section class="patient-meta-card no-print" aria-label="Patient information for printed reports">
+    <h3 class="patient-meta-title">Patient details (for printed report)</h3>
+    <p class="patient-meta-hint">Optional. Used only on the printable summary — not sent to the AI models.</p>
+    <div class="patient-meta-grid">
+      <label class="field">
+        <span>Patient name</span>
+        <input type="text" id="reportPatientName" name="report_patient_name" autocomplete="name" placeholder="e.g. Name Surname" maxlength="120" />
+      </label>
+      <label class="field">
+        <span>Age (years, for report)</span>
+        <input type="number" id="reportPatientAge" name="report_patient_age" min="0" max="130" step="1" placeholder="e.g. 1-100" />
+      </label>
+    </div>
+  </section>
+
+  <div class="tab-bar" role="tablist" aria-label="Analysis mode">
+    <button type="button" class="tab active" data-tab="xray" role="tab" aria-selected="true">
+      <i class="fa-solid fa-x-ray"></i> Chest X-ray
+    </button>
+    <button type="button" class="tab" data-tab="ehr" role="tab" aria-selected="false">
+      <i class="fa-solid fa-notes-medical"></i> EHR risk
+    </button>
+    <button type="button" class="tab" data-tab="combined" role="tab" aria-selected="false">
+      <i class="fa-solid fa-layer-group"></i> Combined
+    </button>
+  </div>
+
+  {# --- X-ray only --- #}
+  <div id="tab-xray" class="tab-panel active" role="tabpanel">
+    <section class="upload-card" aria-label="Chest X-ray upload">
       <form id="uploadForm" class="upload-form">
-      <label for="fileInput" id="dropZone" class="drop-zone product-drop-zone">
-        <span class="upload-icon" aria-hidden="true"><i class="fa-regular fa-image"></i></span>
-        <span class="upload-title">Drop your chest X-ray here</span>
-        <small>or click to browse · JPG, JPEG, PNG</small>
+        <label for="fileInput" id="dropZone" class="drop-zone product-drop-zone">
+          <span class="upload-icon" aria-hidden="true"><i class="fa-regular fa-image"></i></span>
+          <span class="upload-title">Drop your chest X-ray here</span>
+          <small>or click to browse · JPG, JPEG, PNG</small>
         </label>
         <input id="fileInput" name="image" type="file" accept=".jpg,.jpeg,.png" hidden />
 
@@ -27,34 +59,253 @@
           <img id="previewImage" alt="X-ray preview" />
         </div>
 
-      <button id="predictBtn" type="submit" class="btn primary-action" disabled>
-        <i class="fa-solid fa-wand-magic-sparkles"></i>
-        Analyze Image
+        <button id="predictBtn" type="submit" class="btn primary-action" disabled>
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          Analyze image
         </button>
-      <p id="message" class="message" aria-live="polite"></p>
+        <p id="message" class="message" aria-live="polite"></p>
       </form>
-  </section>
+    </section>
 
-  <section id="resultPanel" class="result-panel product-result hidden" aria-live="polite">
-        <div class="result-main">
-          <i id="resultIcon" class="fa-solid fa-circle-info"></i>
-          <div>
-        <span class="result-kicker">Prediction</span>
-            <h2 id="resultTitle">Result</h2>
-            <p id="resultSubtitle"></p>
-          </div>
+    <section id="resultPanel" class="result-panel product-result hidden clinical-report" aria-live="polite">
+      <div id="xrayReportHead" class="clinical-report-head hidden" aria-hidden="true"></div>
+      <div class="report-actions no-print">
+        <button type="button" class="btn-print" id="xrayPrintBtn" title="Print this summary">
+          Print report
+        </button>
+      </div>
+      <div class="result-main">
+        <i id="resultIcon" class="fa-solid fa-circle-info"></i>
+        <div>
+          <span class="result-kicker">Prediction</span>
+          <h2 id="resultTitle">Result</h2>
+          <p id="resultSubtitle"></p>
         </div>
-    <div class="confidence-meter" aria-label="Prediction confidence">
-      <span id="confidenceFill"></span>
+      </div>
+      <div class="clinical-summary-grid">
+        <article class="medical-card primary-summary">
+          <h3>Respiratory Health AI Report</h3>
+          <dl class="summary-metrics">
+            <div><dt>Primary finding</dt><dd id="xrayPrimaryFinding">—</dd></div>
+            <div><dt>Risk level</dt><dd id="xrayRiskLevel">—</dd></div>
+            <div><dt>Overall confidence</dt><dd id="xrayOverallConfidence">—</dd></div>
+          </dl>
+        </article>
+        <article class="medical-card">
+          <h3>X-ray Analysis</h3>
+          <p id="xrayAnalysisNarrative" class="medical-note">Awaiting analysis.</p>
+          <p id="xrayAbnormalityNarrative" class="medical-subnote"></p>
+        </article>
+      </div>
+      <div class="confidence-meter" aria-label="Prediction confidence">
+        <span id="confidenceFill"></span>
+      </div>
+      <div id="probGrid" class="prob-grid multi compact-probs"></div>
+      <section class="medical-card explain-card">
+        <h3>Why this result?</h3>
+        <ul id="xrayWhyResult" class="minimal-recs"></ul>
+      </section>
+      <section class="medical-card recs-card">
+        <h3>Recommended Next Steps</h3>
+        <ul id="xrayNextSteps" class="minimal-recs"></ul>
+        <h3>Risk Factors Identified</h3>
+        <ul id="xrayRiskFactors" class="minimal-recs"></ul>
+        <h3>Preventive / Monitoring Advice</h3>
+        <ul id="xrayPreventiveAdvice" class="minimal-recs"></ul>
+      </section>
+      <section class="medical-card trust-card">
+        <h3>Trust & validation notes</h3>
+        <ul class="minimal-recs">
+          <li>Educational / Research Prototype - Not for medical diagnosis.</li>
+          <li>Model evaluation includes ROC curves, confusion matrices, and held-out test datasets.</li>
+          <li id="xrayDatasetNote">Dataset note: Available in project documentation.</li>
+        </ul>
+      </section>
+    </section>
+  </div>
+
+  {# --- EHR only --- #}
+  <div id="tab-ehr" class="tab-panel" role="tabpanel">
+    {% if lung_schema %}
+    <section class="upload-card" aria-label="EHR lung cancer risk">
+      <p class="form-intro">
+        Enter the same structured fields used to train the lung cancer risk model (age, smoking exposure, exposures, comorbidities).
+        <strong>Nothing is stored</strong> — values are sent once to <code>/predict-lung-cancer</code> for a probability and risk band.
+      </p>
+      <form id="ehrForm" class="ehr-form">
+        {% set fields_required = true %}
+        {% include "partials/ehr_fields.html" %}
+        <button type="submit" class="btn primary-action">
+          <i class="fa-solid fa-calculator"></i> Score EHR record
+        </button>
+        <p id="ehrMessage" class="message" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section id="ehrResult" class="result-panel product-result hidden risk-low clinical-report" aria-live="polite">
+      <div id="ehrReportHead" class="clinical-report-head hidden" aria-hidden="true"></div>
+      <div class="report-actions no-print">
+        <button type="button" class="btn-print" id="ehrPrintBtn" title="Print this summary">
+          Print report
+        </button>
+      </div>
+      <div class="result-main">
+        <i id="ehrResultIcon" class="fa-solid fa-heart-pulse"></i>
+        <div>
+          <span class="result-kicker">Lung cancer risk (EHR model)</span>
+          <h2 id="ehrResultTitle">Result</h2>
+          <p id="ehrResultSubtitle"></p>
         </div>
-    <div id="probGrid" class="prob-grid multi compact-probs"></div>
-    <ul id="xrayRecs" class="minimal-recs"></ul>
-  </section>
+      </div>
+      <div class="clinical-summary-grid">
+        <article class="medical-card primary-summary">
+          <h3>Respiratory Health AI Report</h3>
+          <dl class="summary-metrics">
+            <div><dt>Primary finding</dt><dd id="ehrPrimaryFinding">—</dd></div>
+            <div><dt>Risk level</dt><dd id="ehrRiskLevel">—</dd></div>
+            <div><dt>Overall confidence</dt><dd id="ehrOverallConfidence">—</dd></div>
+          </dl>
+        </article>
+        <article class="medical-card">
+          <h3>EHR Risk Analysis</h3>
+          <p id="ehrAnalysisNarrative" class="medical-note">Awaiting analysis.</p>
+          <p id="ehrContributingFactors" class="medical-subnote"></p>
+        </article>
+      </div>
+      <div class="risk-gauge" aria-label="Risk level">
+        <div class="risk-bar"><span id="ehrRiskFill"></span></div>
+        <div class="risk-labels"><span>Lower</span><span>Higher</span></div>
+      </div>
+      <section class="medical-card explain-card">
+        <h3>Why this result?</h3>
+        <ul id="ehrWhyResult" class="minimal-recs"></ul>
+      </section>
+      <section class="medical-card recs-card">
+        <h3>Recommended Next Steps</h3>
+        <ul id="ehrNextSteps" class="minimal-recs"></ul>
+        <h3>Risk Factors Identified</h3>
+        <ul id="ehrRiskFactors" class="minimal-recs"></ul>
+        <h3>Preventive / Monitoring Advice</h3>
+        <ul id="ehrPreventiveAdvice" class="minimal-recs"></ul>
+      </section>
+    </section>
+    {% else %}
+    <div class="missing-model" role="status">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <div>
+        <strong>EHR model not loaded.</strong>
+        Train or add <code>models/lung_cancer_model.pkl</code> and <code>lung_cancer_model_meta.json</code>, then restart the app.
+        <br /><code>python src/train_lung_cancer.py</code>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {# --- Combined --- #}
+  <div id="tab-combined" class="tab-panel" role="tabpanel">
+    <section class="upload-card" aria-label="Combined X-ray and EHR">
+      <p class="form-intro">
+        Upload an X-ray (required). {% if lung_schema %}Add clinical fields below to include EHR in the fused score; leave any field blank or
+        &ldquo;Skip&rdquo; to run <strong>X-ray only</strong>.{% else %}EHR fields are unavailable until the lung cancer model is installed.{% endif %}
+      </p>
+      <form id="combinedForm" class="upload-form">
+        <label for="combinedFileInput" id="combinedDropZone" class="drop-zone product-drop-zone">
+          <span class="upload-icon" aria-hidden="true"><i class="fa-regular fa-image"></i></span>
+          <span class="upload-title">Drop chest X-ray for combined run</span>
+          <small>JPG, JPEG, PNG</small>
+        </label>
+        <input id="combinedFileInput" name="image" type="file" accept=".jpg,.jpeg,.png" hidden />
+
+        <div id="combinedPreviewWrapper" class="preview-wrapper hidden">
+          <img id="combinedPreviewImage" alt="Combined tab X-ray preview" />
+        </div>
+
+        {% if lung_schema %}
+        <h3 class="form-section-title"><i class="fa-solid fa-user-doctor"></i> Optional EHR inputs</h3>
+        {% set fields_required = false %}
+        {% include "partials/ehr_fields.html" %}
+        {% endif %}
+
+        <button id="combinedBtn" type="submit" class="btn primary-action" disabled>
+          <i class="fa-solid fa-layer-group"></i> Run combined assessment
+        </button>
+        <p id="combinedMessage" class="message" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section id="combinedResult" class="result-panel product-result hidden risk-low clinical-report" aria-live="polite">
+      <div id="combinedReportHead" class="clinical-report-head hidden" aria-hidden="true"></div>
+      <div class="report-actions no-print">
+        <button type="button" class="btn-print" id="combinedPrintBtn" title="Print this summary">
+          Print report
+        </button>
+      </div>
+      <div class="result-main">
+        <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
+        <div>
+          <span class="result-kicker">Fused assessment</span>
+          <h2 id="combinedTitle">Combined result</h2>
+          <p id="combinedSubtitle"></p>
+        </div>
+      </div>
+      <div class="clinical-summary-grid">
+        <article class="medical-card primary-summary">
+          <h3>Respiratory Health AI Report</h3>
+          <dl class="summary-metrics">
+            <div><dt>Primary finding</dt><dd id="combinedPrimaryFinding">—</dd></div>
+            <div><dt>Risk level</dt><dd id="combinedRiskLevel">—</dd></div>
+            <div><dt>Overall confidence</dt><dd id="combinedOverallConfidence">—</dd></div>
+          </dl>
+        </article>
+        <article class="medical-card">
+          <h3>Combined AI Assessment</h3>
+          <p class="medical-note">This score combines X-ray findings with patient risk factors.</p>
+          <p id="combinedReasoningText" class="medical-subnote"></p>
+        </article>
+      </div>
+      <div class="combined-grid">
+        <div class="combined-card">
+          <h4><i class="fa-solid fa-x-ray"></i> X-ray</h4>
+          <p id="combinedXray">—</p>
+          <p id="combinedXrayDetail" class="form-intro" style="margin:0"></p>
+        </div>
+        <div class="combined-card">
+          <h4><i class="fa-solid fa-notes-medical"></i> EHR</h4>
+          <p id="combinedEhr">—</p>
+        </div>
+        <div class="combined-card combined-overall">
+          <h4><i class="fa-solid fa-gauge-high"></i> Combined</h4>
+          <p id="combinedOverall">—</p>
+        </div>
+      </div>
+      <div id="combinedProbGrid" class="prob-grid multi compact-probs"></div>
+      <section class="medical-card explain-card combined-page-two">
+        <h3>Why this result?</h3>
+        <ul id="combinedWhyResult" class="minimal-recs"></ul>
+      </section>
+      <section class="medical-card recs-card">
+        <h3>Recommended Next Steps</h3>
+        <ul id="combinedNextSteps" class="minimal-recs"></ul>
+        <h3>Risk Factors Identified</h3>
+        <ul id="combinedRiskFactors" class="minimal-recs"></ul>
+        <h3>Preventive / Monitoring Advice</h3>
+        <ul id="combinedPreventiveAdvice" class="minimal-recs"></ul>
+      </section>
+      <section class="medical-card trust-card">
+        <h3>Trust & validation notes</h3>
+        <ul class="minimal-recs">
+          <li>Educational / Research Prototype - Not for medical diagnosis.</li>
+          <li>Combined score is derived from model outputs and clinical factors for research demonstration.</li>
+          <li id="combinedDatasetNote">Validation summary is documented in the evaluation report.</li>
+        </ul>
+      </section>
+    </section>
+  </div>
 
   <div class="product-tags" aria-label="Product capabilities">
-    <span>AI Classification</span>
-    <span>Fast Inference</span>
-    <span>Medical Imaging Ready</span>
+    <span>AI classification</span>
+    <span>Optional EHR</span>
+    <span>Score-level fusion</span>
   </div>
 </div>
 {% endblock %}

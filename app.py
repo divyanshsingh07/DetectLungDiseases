@@ -2,7 +2,9 @@ from io import BytesIO
 from pathlib import Path
 import base64
 import json
+import os
 import pickle
+from typing import Optional
 
 from flask import Flask, jsonify, render_template, request, send_from_directory
 from PIL import Image
@@ -141,16 +143,33 @@ def _probability_from_percent(value, field_name: str) -> float:
     return float(np.clip(probability, 0.0, 1.0))
 
 
-def fuse_patient_risk(xray_result: dict, lung_result: dict) -> dict:
-    """Fuse X-ray abnormality and EHR cancer risk into one patient score."""
+def fuse_patient_risk(xray_result: dict, lung_result: Optional[dict]) -> dict:
+    """Fuse X-ray abnormality and optional EHR cancer risk into one patient score.
+
+    When ``lung_result`` is None or missing probability, the score uses only the
+    X-ray abnormality signal (same weighting semantics as an all-X-ray fusion).
+    """
     if "abnormal_probability" not in xray_result:
         raise ValueError("X-ray result is missing abnormal_probability.")
-    if "probability" not in lung_result:
-        raise ValueError("EHR result is missing lung cancer probability.")
 
     abnormal_prob = _probability_from_percent(
         xray_result["abnormal_probability"], "xray.abnormal_probability"
     )
+
+    if lung_result is None or "probability" not in lung_result:
+        overall = float(np.clip(abnormal_prob, 0.0, 1.0))
+        return {
+            "score": round(overall * 100.0, 2),
+            "risk_band": risk_band(overall),
+            "method": "xray_only",
+            "ehr_used": False,
+            "weights": {"xray_abnormal": 1.0, "ehr_lung_cancer": 0.0},
+            "components": {
+                "xray_abnormal": round(abnormal_prob * 100.0, 2),
+                "ehr_lung_cancer": None,
+            },
+        }
+
     cancer_prob = _probability_from_percent(
         lung_result["probability"], "lung_cancer.probability"
     )
@@ -168,6 +187,7 @@ def fuse_patient_risk(xray_result: dict, lung_result: dict) -> dict:
         "score": round(overall * 100.0, 2),
         "risk_band": risk_band(overall),
         "method": "weighted_average",
+        "ehr_used": True,
         "weights": {
             "xray_abnormal": round(xray_weight, 3),
             "ehr_lung_cancer": round(ehr_weight, 3),
@@ -363,28 +383,40 @@ def _enrich_accuracy_report(report: dict) -> dict:
     xray_metrics = report.get("multi_disease_model") or {}
     ehr_metrics = report.get("lung_cancer_model") or {}
     total_weight = sum(FUSION_WEIGHTS.values()) or 1.0
-    xray_weight = FUSION_WEIGHTS["xray_abnormal"] / total_weight
-    ehr_weight = FUSION_WEIGHTS["ehr_lung_cancer"] / total_weight
+    xray_w_cfg = FUSION_WEIGHTS["xray_abnormal"] / total_weight
+    ehr_w_cfg = FUSION_WEIGHTS["ehr_lung_cancer"] / total_weight
 
     xray_accuracy = xray_metrics.get("accuracy")
     ehr_accuracy = ehr_metrics.get("accuracy")
     fusion_score = None
+    ehr_used_in_proxy = False
+    display_xray_w, display_ehr_w = xray_w_cfg, ehr_w_cfg
+
     if xray_accuracy is not None and ehr_accuracy is not None:
-        fusion_score = (xray_weight * float(xray_accuracy)) + (ehr_weight * float(ehr_accuracy))
+        fusion_score = (xray_w_cfg * float(xray_accuracy)) + (ehr_w_cfg * float(ehr_accuracy))
+        ehr_used_in_proxy = True
+    elif xray_accuracy is not None:
+        fusion_score = float(xray_accuracy)
+        display_xray_w, display_ehr_w = 1.0, 0.0
+    elif ehr_accuracy is not None:
+        fusion_score = float(ehr_accuracy)
+        display_xray_w, display_ehr_w = 0.0, 1.0
+        ehr_used_in_proxy = True
 
     report["fusion_metrics"] = {
         "method": "weighted_average",
-        "xray_weight": xray_weight,
-        "ehr_weight": ehr_weight,
+        "xray_weight": display_xray_w,
+        "ehr_weight": display_ehr_w,
         "xray_accuracy": xray_accuracy,
         "ehr_accuracy": ehr_accuracy,
         "score_proxy": fusion_score,
+        "ehr_used_in_proxy": ehr_used_in_proxy,
         "has_patient_level_accuracy": False,
         "note": (
-            "Fusion combines the X-ray abnormality probability and EHR lung cancer "
-            "probability at prediction time. The displayed fusion score is a model-"
-            "accuracy proxy because this project does not include a paired patient-"
-            "level dataset with both X-rays, EHR fields, and one fused ground-truth label."
+            "Fusion combines the X-ray abnormality probability and optional EHR lung cancer "
+            "probability at prediction time. The displayed fusion score is a model-accuracy "
+            "proxy (weighted when both models were evaluated, otherwise the available modality). "
+            "There is no single paired patient-level test set for a true multimodal accuracy."
         ),
     }
     return report
@@ -462,6 +494,21 @@ def _lung_payload_from_request(req) -> dict:
     return {k: v for k, v in req.form.items()}
 
 
+def _lung_ehr_payload_complete(payload: dict) -> bool:
+    """True if every EHR field required by metadata is present and non-empty."""
+    if lung_meta is None:
+        return False
+    numeric = lung_meta["numeric_features"]
+    categorical = lung_meta["categorical_features"]
+    for col in numeric + categorical:
+        v = payload.get(col)
+        if v is None:
+            return False
+        if isinstance(v, str) and v.strip() == "":
+            return False
+    return True
+
+
 def _run_lung_cancer_model(payload: dict) -> dict:
     if lung_model is None or lung_meta is None:
         raise RuntimeError(
@@ -523,11 +570,13 @@ def predict_lung_cancer():
 
 @app.route("/predict-combined", methods=["POST"])
 def predict_combined():
-    """Run multi-disease X-ray analysis + EHR cancer-risk and fuse them.
+    """Run multi-disease X-ray analysis and optionally EHR cancer-risk, then fuse.
 
     Expects multipart/form-data with:
-      - image: chest X-ray file
-      - EHR fields as flat form entries (age, gender, pack_years, ...)
+      - image: chest X-ray file (required)
+      - EHR fields as flat form entries (optional). When all required fields are
+        present and the EHR model is loaded, fusion uses both modalities; otherwise
+        the combined score uses the X-ray abnormality signal only.
     """
     if "image" not in request.files:
         return jsonify({"error": "Chest X-ray image is required."}), 400
@@ -546,15 +595,17 @@ def predict_combined():
     except Exception:
         return jsonify({"error": "Failed to analyse the chest X-ray."}), 500
 
-    try:
-        ehr_payload = {k: v for k, v in request.form.items()}
-        lung_result = _run_lung_cancer_model(ehr_payload)
-    except ValueError as ve:
-        return jsonify({"error": str(ve)}), 400
-    except RuntimeError as re_:
-        return jsonify({"error": str(re_)}), 500
-    except Exception:
-        return jsonify({"error": "Failed to score the EHR inputs."}), 500
+    ehr_payload = {k: v for k, v in request.form.items()}
+    lung_result = None
+    if _lung_ehr_payload_complete(ehr_payload):
+        try:
+            lung_result = _run_lung_cancer_model(ehr_payload)
+        except ValueError as ve:
+            return jsonify({"error": str(ve)}), 400
+        except RuntimeError as re_:
+            return jsonify({"error": str(re_)}), 500
+        except Exception:
+            return jsonify({"error": "Failed to score the EHR inputs."}), 500
 
     try:
         fusion = fuse_patient_risk(xray, lung_result)
@@ -564,35 +615,44 @@ def predict_combined():
     summary_lines = [
         f"X-ray top finding: {xray['prediction']} ({xray['confidence']}% confidence).",
         f"Abnormal X-ray signal (any disease): {xray['abnormal_probability']}%.",
-        f"EHR-derived lung cancer risk: {lung_result['probability']}% ({lung_result['risk_band']['label']}).",
-        (
-            f"Combined respiratory health score: {fusion['score']}% "
-            f"({fusion['risk_band']['label']})."
-        ),
     ]
-
-    return jsonify(
-        {
-            "xray": {
-                "prediction": xray["prediction"],
-                "confidence": xray["confidence"],
-                "probabilities": xray["probabilities"],
-                "abnormal_probability": xray["abnormal_probability"],
-                "model": xray["model"],
-                "heatmap_overlay": xray["heatmap_overlay"],
-                "recommendations": disease_recommendations(xray["prediction"], xray["confidence"]),
-            },
-            "lung_cancer": lung_result,
-            "combined": {
-                "score": fusion["score"],
-                "risk_band": fusion["risk_band"],
-                "method": fusion["method"],
-                "weights": fusion["weights"],
-                "components": fusion["components"],
-                "summary": summary_lines,
-            },
-        }
+    if lung_result is not None:
+        summary_lines.append(
+            f"EHR-derived lung cancer risk: {lung_result['probability']}% "
+            f"({lung_result['risk_band']['label']})."
+        )
+    else:
+        summary_lines.append(
+            "EHR not applied (fields omitted, incomplete, or model unavailable); "
+            "score reflects chest X-ray only."
+        )
+    summary_lines.append(
+        f"Combined respiratory health score: {fusion['score']}% "
+        f"({fusion['risk_band']['label']})."
     )
+
+    response_body = {
+        "xray": {
+            "prediction": xray["prediction"],
+            "confidence": xray["confidence"],
+            "probabilities": xray["probabilities"],
+            "abnormal_probability": xray["abnormal_probability"],
+            "model": xray["model"],
+            "heatmap_overlay": xray["heatmap_overlay"],
+            "recommendations": disease_recommendations(xray["prediction"], xray["confidence"]),
+        },
+        "lung_cancer": lung_result,
+        "combined": {
+            "score": fusion["score"],
+            "risk_band": fusion["risk_band"],
+            "method": fusion["method"],
+            "ehr_used": fusion.get("ehr_used", False),
+            "weights": fusion["weights"],
+            "components": fusion["components"],
+            "summary": summary_lines,
+        },
+    }
+    return jsonify(response_body)
 
 
 @app.route("/model-accuracy", methods=["GET"])
@@ -663,4 +723,8 @@ def evaluation_image(filename: str):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # PORT matches docker-compose host mapping when set (e.g. PORT=8080).
+    # FLASK_RUN_HOST=0.0.0.0 allows other devices on your LAN to reach the dev server.
+    _port = int(os.environ.get("PORT", "8080"))
+    _host = os.environ.get("FLASK_RUN_HOST", "127.0.0.1")
+    app.run(debug=True, host=_host, port=_port)

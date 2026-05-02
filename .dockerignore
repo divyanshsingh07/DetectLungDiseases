@@ -1,0 +1,17 @@
+.git
+.gitignore
+venv
+__pycache__
+*.pyc
+.DS_Store
+.idea
+.vscode
+
+# Large local artifacts mounted at runtime in compose
+datasets
+models
+evaluation_results
+
+# Keep local logs and caches out of build context
+*.log
+.pytest_cache

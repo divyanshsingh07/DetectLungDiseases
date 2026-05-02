@@ -115,6 +115,14 @@ def test_fusion_logic():
             print("  ❌ Fused score was not clamped into 0-100 range")
             return False
 
+        xray_only = app_module.fuse_patient_risk({"abnormal_probability": 73}, None)
+        if xray_only["score"] != 73.0 or xray_only["method"] != "xray_only":
+            print("  ❌ X-ray-only fusion should mirror abnormal probability")
+            return False
+        if xray_only.get("ehr_used") is not False:
+            print("  ❌ X-ray-only fusion should set ehr_used False")
+            return False
+
         print("  ✅ Fusion score combines X-ray and EHR probabilities correctly")
         return True
     except Exception as e:
