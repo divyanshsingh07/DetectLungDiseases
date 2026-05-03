@@ -278,6 +278,9 @@ Then generates:
 
 Output location: `evaluation_results/`.
 
+Detailed methodology and latest reported numbers are documented in
+`docs/MODEL_ACCURACY_GUIDE.md`.
+
 ---
 
 ## Detailed ML project explanation

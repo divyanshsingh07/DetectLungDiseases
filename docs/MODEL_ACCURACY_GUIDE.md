@@ -1,7 +1,8 @@
-# Model Accuracy Dashboard - User Guide
+# Model Accuracy Dashboard - Evaluation Method and Results
 
 ## Overview
-The Model Accuracy Dashboard provides comprehensive performance metrics and visualizations for both AI models in the Respiratory Health AI system.
+
+This document explains how Respiratory Health AI is evaluated, what metrics are used, and what the latest measured results are.
 
 ## How to Access
 
@@ -18,94 +19,74 @@ The Model Accuracy Dashboard provides comprehensive performance metrics and visu
 ### Method 2: Direct URL
 Navigate directly to: `http://127.0.0.1:5000/model-accuracy`
 
-## Features
+## What is evaluated
 
-### 1. **Quick Metrics Overview**
-View at-a-glance accuracy metrics:
-- Pneumonia Detection Model Accuracy
-- Lung Cancer Risk Model Accuracy
-- Combined Average Accuracy
-- Total Samples Evaluated
+### 1) Multi-disease chest X-ray model
 
-### 2. **Detailed Performance Table**
-Comprehensive breakdown including:
+- Model: ResNet18 (5-class)
+- Classes: `Normal`, `Pneumonia`, `COVID-19`, `Tuberculosis`, `Lung_Opacity`
+- Validation split: stratified holdout (`test_size=0.2`)
+- Key outputs: class predictions, confusion matrix, ROC (Normal vs Abnormal), AUC
+
+### 2) Legacy pneumonia model (fallback)
+
+- Model: ResNet18 (2-class)
+- Classes: `Normal`, `Pneumonia`
+- Validation split: loader-based validation set used by legacy pipeline
+- Key outputs: binary confusion matrix, ROC, AUC
+
+### 3) EHR lung cancer risk model
+
+- Model: scikit-learn tabular pipeline (`RandomForestClassifier` + preprocessing)
+- Labels: `No Cancer`, `Lung Cancer`
+- Validation split: stratified holdout (`test_size=0.2`)
+- Key outputs: binary confusion matrix, ROC, AUC
+
+### 4) Combined/fusion proxy metric
+
+- Current fusion weights:
+  - `xray_abnormal = 0.5`
+  - `ehr_lung_cancer = 0.5`
+- If both modalities are present:
+  - fusion proxy = weighted average of X-ray accuracy and EHR accuracy
+- If one modality is unavailable:
+  - fallback proxy uses available modality (`xray_only` or `ehr_only`)
+
+Important: this is a score-level proxy for system summary, not a separately trained paired multimodal classifier.
+
+## Evaluation metrics
+
 - Accuracy
 - Precision
 - Recall
-- F1-Score
-- Sample sizes
+- F1-score
+- Confusion matrix
+- ROC curve and AUC
 
-### 3. **Visual Analytics**
-Interactive visualizations:
-- **Confusion Matrices**: Shows prediction accuracy breakdown (True Positives, False Positives, etc.)
-- **Metrics Comparison**: Side-by-side bar chart comparing all performance metrics
-- **ROC Curves**: Receiver Operating Characteristic curves showing model discrimination ability
-
-### 4. **Confusion Matrix Breakdown**
-Detailed view of:
-- True Negatives (TN)
-- False Positives (FP)
-- False Negatives (FN)
-- True Positives (TP)
-
-### 5. **Run Evaluation**
-Click the **"Run Model Evaluation"** button to:
-- Re-evaluate both models on fresh data
-- Generate new metrics and graphs
-- Update all visualizations
-
-**Note:** Evaluation takes approximately 1-2 minutes to complete.
-
-## What Gets Evaluated
-
-### Pneumonia Detection Model
-- **Dataset**: Chest X-ray images (validation set)
-- **Classes**: Normal vs Pneumonia
-- **Method**: ResNet18 deep learning model
-
-### Lung Cancer Risk Model
-- **Dataset**: Electronic Health Records (EHR)
-- **Classes**: No Cancer vs Lung Cancer
-- **Method**: RandomForest classifier on patient data
-
-## Understanding the Metrics
-
-### Accuracy
-Percentage of correct predictions out of all predictions.
-
-### Precision
-Of all positive predictions, how many were actually positive?
-- Higher precision = fewer false alarms
-
-### Recall (Sensitivity)
-Of all actual positive cases, how many did we catch?
-- Higher recall = fewer missed cases
-
-### F1-Score
-Harmonic mean of precision and recall.
-- Balanced measure when both are important
-
-### Confusion Matrix
-- **True Positive (TP)**: Correctly predicted positive
-- **True Negative (TN)**: Correctly predicted negative
-- **False Positive (FP)**: Incorrectly predicted positive
-- **False Negative (FN)**: Incorrectly predicted negative
+These are computed in `src/comprehensive_evaluation.py` for each model.
 
 ## Technical Details
 
-### Files Generated
-When you run evaluation, the following files are created in `evaluation_results/`:
+### Files generated
+
+When evaluation runs, the following files are written in `evaluation_results/`:
 - `confusion_matrices.png` - Heatmap visualizations
 - `metrics_comparison.png` - Bar chart comparison
 - `roc_curves.png` - ROC curve visualizations
 - `results_table.csv` - Metrics in CSV format
-- `evaluation_report.json` - Complete results in JSON
+- `evaluation_report.json` - canonical metrics source for the dashboard
 
-### Command Line Alternative
-You can also run evaluation from the command line:
+### Running evaluation
+
+From CLI:
 ```bash
-python comprehensive_evaluation.py
+python src/comprehensive_evaluation.py
 ```
+
+From web UI:
+
+1. open `/model-accuracy`
+2. click **Run Model Evaluation**
 
 ## Troubleshooting
 
@@ -123,38 +104,40 @@ python comprehensive_evaluation.py
 - Check terminal for progress messages
 - Ensure both models are properly loaded
 
-## Current Performance (Last Evaluation)
+## Latest results (from `evaluation_results/evaluation_report.json`)
 
-Based on the most recent evaluation:
+### Multi-disease chest X-ray model
 
-### Pneumonia Detection Model
-- **Accuracy**: 93.58%
-- **Precision**: 93.97%
-- **Recall**: 97.52%
-- **F1-Score**: 95.71%
-- **Samples**: 1,044 chest X-rays
+- Accuracy: **92.39%**
+- Precision: **93.38%**
+- Recall: **92.97%**
+- F1-score: **93.08%**
+- Samples: **1,340**
 
-### Lung Cancer Risk Model
-- **Accuracy**: 69.82%
-- **Precision**: 77.93%
-- **Recall**: 78.25%
-- **F1-Score**: 78.09%
-- **Samples**: 10,000 patient records
+### Legacy pneumonia model
 
-### Combined System
-- **Average Accuracy**: 81.70%
-- **Weighted Accuracy**: 72.07%
+- Accuracy: **94.06%**
+- Precision: **95.73%**
+- Recall: **96.46%**
+- F1-score: **96.10%**
+- Samples: **1,044**
 
-## Next Steps
+### EHR lung cancer risk model
 
-1. **Regular Monitoring**: Re-run evaluation periodically to track model performance
-2. **Data Updates**: When new data is added, re-evaluate to see impact
-3. **Model Improvements**: Use metrics to identify areas for enhancement
-4. **Documentation**: Share results with stakeholders using generated CSV/JSON files
+- Accuracy: **69.82%**
+- Precision: **77.93%**
+- Recall: **78.25%**
+- F1-score: **78.09%**
+- Samples: **10,000**
 
-## Support
+### Combined summary
 
-For issues or questions:
-1. Check the evaluation logs in terminal
-2. Verify both model files exist (`model.pth`, `lung_cancer_model.pkl`)
-3. Ensure all dependencies are installed (`pip install -r requirements.txt`)
+- Average accuracy: **85.42%**
+- Weighted accuracy: **74.31%**
+- Fusion proxy (multimodal): **81.10%**
+
+## Notes and limitations
+
+- Evaluation is run at model level; fusion is currently a score-level proxy.
+- Reported numbers are sensitive to dataset composition and split seed.
+- This is an educational/research prototype and not a clinical diagnostic device.
